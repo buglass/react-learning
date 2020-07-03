@@ -1,0 +1,7 @@
+# Ignore the bootstrap.ts file
+test/*
+src/Globals.d.ts
+jest.config.js
+webpack.config.js
+config/*
+src/components/TestComponent/*

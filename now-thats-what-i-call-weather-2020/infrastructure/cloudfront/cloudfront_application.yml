@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Description: 'Creates the application cloudfront distribution'
+
+Parameters:
+
+  S3Bucket:
+    Type: String
+    Description: Bucketname created in application deployment stack.
+  
+  OAIUser:
+    Type: String
+    Description: Origin access Identity user to be used in S3 bucket policy.
+
+  AcmCertificate:
+    Type: String
+    Description: SSL Certificate stored in ACM in the us-east-1 Region    
+
+  Route53HostedZone:
+    Type: String
+    Description: Hosted zone id from Route53 
+
+  ARecordName:
+    Type: String
+    Description: Name of the A record to be created in the hosted zone
+
+Resources:
+
+  StaticSiteS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Sub ${S3Bucket}
+      PolicyDocument: 
+        Version: 2012-10-17
+        Statement:
+          -
+            Sid: AllowCloudFront
+            Effect: Allow
+            Principal: 
+             CanonicalUser:
+                Fn::GetAtt: [ CloudFrontOriginAccessIdentity , S3CanonicalUserId ]
+            Action:
+              - s3:GetObject
+            Resource: 
+                - !Sub arn:aws:s3:::${S3Bucket}/*
+  
+  CloudFrontOriginAccessIdentity:
+      Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+      Properties:
+        CloudFrontOriginAccessIdentityConfig:
+          Comment: !Sub ${OAIUser}
+
+  CloudFront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: !Sub ${S3Bucket}.s3.amazonaws.com
+          Id: !Sub ${S3Bucket}-originid
+          S3OriginConfig:
+            OriginAccessIdentity:
+              Fn::Join:
+                - ''
+                -
+                  - 'origin-access-identity/cloudfront/'
+                  - Ref: CloudFrontOriginAccessIdentity
+        Enabled: true
+        Comment: Distribution for web-app-kit
+        HttpVersion: http2
+        Logging:
+          IncludeCookies: false
+          Bucket: !Sub ${S3Bucket}.s3.amazonaws.com
+          Prefix: !Sub ${S3Bucket}-logs
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          TargetOriginId: !Sub ${S3Bucket}-originid
+          Compress: True
+          MaxTTL: 5
+          MinTTL: 5
+          DefaultTTL: 5
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        PriceClass: PriceClass_200
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AcmCertificate
+          SslSupportMethod: sni-only
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponsePagePath: "/index.html"
+            ResponseCode: 200
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 403
+            ResponsePagePath: "/index.html"
+            ResponseCode: 200
+            ErrorCachingMinTTL: 0
+        Aliases:
+        - !Ref ARecordName
+
+  StaticSiteRoute53RecordSet:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref Route53HostedZone
+      AliasTarget: 
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !GetAtt CloudFront.DomainName
+      Name: !Ref ARecordName
+      Type: A

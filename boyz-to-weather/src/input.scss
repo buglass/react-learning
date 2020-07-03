@@ -1,0 +1,44 @@
+@use 'colours';
+
+div {
+    color: colours.$title_colour;
+}
+
+.resultsTable {
+    background-color: colours.$table_colour;
+}
+
+.main {
+    width: 70em;
+    margin: auto;
+    padding-top: 1.5em;
+    background-color: colours.$bg_colour;
+}
+
+body {
+    background-color: colours.$bg_colour;
+}
+
+#searchId{
+    background-color: colours.$search_colour;
+}
+
+Table {
+    color: colours.$title_colour;
+}
+
+.errorMessage {
+    color: red;
+}
+
+.eui-table__head-label-container {
+    background-color: colours.$table_head;
+}
+
+.eui-table__body-row:hover{
+    background-color: colours.$search_colour;
+}
+
+.eui-table__head-label {
+    color: white;
+}

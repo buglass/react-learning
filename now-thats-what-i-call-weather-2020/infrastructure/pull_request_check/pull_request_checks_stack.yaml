@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Cloudformation stack to perform pull request checks for the solution'
+
+Parameters:
+  
+  Environment:
+    Type: String
+    Description: The environment that the checks are being deployed to
+    Default: sbx
+    AllowedValues:
+      - prd
+      - tst
+      - dev
+      - stg
+      - sbx
+  
+  SourceCodeLocation:
+    Type: String
+    Description: The source code location to hook into
+
+  RepositoryName:
+    Type: String
+    Description: The name of the repository
+
+  GitHubToken:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: GitHub OAuth Token
+    Default: GitHubToken
+
+  SonarToken:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: sonar token
+    Default: SonarToken
+
+Resources: 
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${Environment}-${RepositoryName}-pull-request-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - 'codebuild.amazonaws.com'
+          Action:
+          - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: !Sub ${Environment}-${RepositoryName}-pull-request-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${Environment}-${RepositoryName}-PullRequestChecks:*"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "cloudwatch:*"                   
+              - Effect: "Allow"
+                Action:
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuilds
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:SetStackPolicy
+                  - iam:PassRole
+                  - cloudformation:ValidateTemplate
+                  - cloudwatch:*
+                Resource: "*"
+
+  PullRequestChecksStack:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name:  !Sub ${Environment}-${RepositoryName}-PullRequestChecks
+      Description: Runs all checks on the pushed branch.
+      TimeoutInMinutes: 15
+      ServiceRole: !Ref CodeBuildRole
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment: 
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:2.0
+        EnvironmentVariables:
+          - Name: GITHUB_TOKEN
+            Value: !Ref GitHubToken
+          - Name: SONAR_TOKEN
+            Value: !Ref SonarToken
+      Source:
+        Type: GITHUB
+        Auth:
+          Type: OAUTH
+          Resource: !Ref GitHubToken
+        Location: !Ref SourceCodeLocation 
+        ReportBuildStatus: true
+        GitCloneDepth: 0
+        BuildSpec: |-
+          version: 0.2       
+          phases:
+            install:
+              runtime-versions:
+                nodejs: 10
+            build:
+              commands:
+                - echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc
+                - make install CI=true
+                - make build-prod
+                - make test-cov
+                - make vet
+                - |
+                  if expr "${CODEBUILD_WEBHOOK_HEAD_REF}" = "refs/heads/master"; then
+                   npm run sonar-master
+                  else
+                   npm run sonar
+                  fi
+                - cd -             
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED,PULL_REQUEST_REOPENED
+            - Type: BASE_REF
+              Pattern: ^refs/heads/develop$
+              ExcludeMatchedPattern: false
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: ^refs/heads/develop$
+              ExcludeMatchedPattern: false
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: ^refs/heads/master$
+              ExcludeMatchedPattern: false

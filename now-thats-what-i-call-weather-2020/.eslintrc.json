@@ -1,0 +1,192 @@
+{
+  "env": {
+    "browser": true,
+    "node": true,
+    "commonjs": true,
+    "es6": true,
+    "jest": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:jest/recommended",
+    "plugin:jest/style"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": [
+    "react",
+    "json",
+    "@typescript-eslint",
+    "import",
+    "jest"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/**.spec.ts?(x)"
+      ],
+      "rules": {
+        "@typescript-eslint/no-magic-numbers": "off"
+      }
+    }
+  ],
+  "rules": {
+    //typescript-eslint rules
+    "@typescript-eslint/typedef": [
+      "error",
+      {
+        "call-signature": true,
+        "arrow-call-signature": true,
+        "parameter": true,
+        "arrow-parameter": true,
+        "property-declaration": true,
+        "variable-declaration": true,
+        "member-variable-declaration": true
+      }
+    ],
+    "no-magic-numbers": "off",
+    "@typescript-eslint/no-magic-numbers": [
+      "error",
+      {
+        "ignoreNumericLiteralTypes": true,
+        "ignoreEnums": true
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/interface-name-prefix": [
+      "error",
+      {
+        "prefixWithI": "always"
+      }
+    ],
+    "@typescript-eslint/indent": [
+      "error",
+      2
+    ],
+    "@typescript-eslint/type-annotation-spacing": [
+      "error",
+      {
+        "before": false,
+        "after": false,
+        "overrides": {
+          "arrow": {
+            "before": true,
+            "after": true
+          },
+          "colon": {
+            "before": false,
+            "after": true
+          }
+        }
+      }
+    ],
+    "@typescript-eslint/explicit-member-accessibility": [
+      "error",
+      {
+        "overrides": {
+          "constructors": "off"
+        }
+      }
+    ],
+    "@typescript-eslint/prefer-readonly": "error",
+    "@typescript-eslint/semi": "error",
+    "@typescript-eslint/unified-signatures": "error",
+    "@typescript-eslint/unbound-method": "off",
+    //eslint rules
+    "no-trailing-spaces": [
+      "error",
+      {
+        "ignoreComments": true
+      }
+    ],
+    "quotes": [
+      "error",
+      "double",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "capitalized-comments": [
+      "error",
+      "always"
+    ],
+    "spaced-comment": [
+      "error",
+      "always"
+    ],
+    "max-len": [
+      "error",
+      {
+        "code": 120
+      }
+    ],
+    "no-unused-expressions": "error",
+    "sort-keys": "error",
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ],
+    "max-classes-per-file": [
+      "error",
+      1
+    ],
+    "no-console": "error",
+    "no-multiple-empty-lines": "error",
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
+    "eol-last": [
+      "error",
+      "always"
+    ],
+    //eslint-plugin-import rules
+    "import/order": "error",
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": [
+          "**/*.scss",
+          "**/*.css"
+        ]
+      }
+    ]
+  },
+  "settings": {
+    "react": {
+      "createClass": "createReactClass",
+      "pragma": "React",
+      "version": "detect",
+      "flowVersion": "0.53"
+    },
+    "propWrapperFunctions": [
+      "forbidExtraProps",
+      {
+        "property": "freeze",
+        "object": "Object"
+      },
+      {
+        "property": "myFavoriteWrapper"
+      }
+    ],
+    "linkComponents": [
+      "Hyperlink",
+      {
+        "name": "Link",
+        "linkAttribute": "to"
+      }
+    ]
+  }
+}

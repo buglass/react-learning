@@ -1,0 +1,44 @@
+div {
+  color: #3ec7a7;
+}
+
+.resultsTable {
+  background-color: #585e77;
+}
+
+.main {
+  width: 70em;
+  margin: auto;
+  padding-top: 1.5em;
+  background-color: #2E3047;
+}
+
+body {
+  background-color: #2E3047;
+}
+
+#searchId {
+  background-color: #97f8f8d3;
+}
+
+Table {
+  color: #3ec7a7;
+}
+
+.errorMessage {
+  color: red;
+}
+
+.eui-table__head-label-container {
+  background-color: #43455C;
+}
+
+.eui-table__body-row:hover {
+  background-color: #97f8f8d3;
+}
+
+.eui-table__head-label {
+  color: white;
+}
+
+/*# sourceMappingURL=input.css.map */

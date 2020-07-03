@@ -1,0 +1,94 @@
+import Input from './input';
+import { render, mount, configure } from 'enzyme'
+import Adapter from 'enzyme-adapter-react-16'
+import React from 'react';
+import { geoPropTypes, GeolocatedProps, ExternalProps } from 'react-geolocated'
+import 'https'
+import { wait } from '@testing-library/dom';
+import { doesNotReject } from 'assert';
+import { delay } from 'q';
+
+require ('selenium-webdriver/chrome');
+require ('chromedriver');
+
+const { Builder, By, Key, until } = require('selenium-webdriver');
+
+configure({adapter: new Adapter()})
+
+//Input.propTypes = Object.assign({}, Input.propTypes, geoPropTypes);
+
+describe('input', () => {
+
+    beforeEach(() => {
+        jest.setTimeout(10000)
+    });
+
+    it('fetches data with valid City name', async () => {
+
+        //var foo =
+        jest.mock("react-geolocated", () => {
+            return {
+                geolocated: function(geoPropTypes: GeolocatedProps) {
+                    return function(component: React.ComponentType<GeolocatedProps>) {
+                        component.defaultProps = {
+                            ...component.defaultProps,
+                            isGeolocationAvailable: geoPropTypes.isGeolocationAvailable,
+                            isGeolocationEnabled: geoPropTypes.isGeolocationEnabled,
+                            coords: geoPropTypes.coords
+                        };
+                        return component;
+                    };
+                }
+            }
+        });
+
+        Input.propTypes = Object.assign({}, Input.propTypes, geoPropTypes);
+
+        const mockSuccessResponse = {};
+        const mockJsonPromise = Promise.resolve(mockSuccessResponse);
+        const mockFetchPromise = Promise.resolve({
+            json: () => mockJsonPromise
+        });
+
+        const globalAny:any = global;
+        globalAny.fetch = jest.fn().mockImplementation(() => Promise.resolve({ok: true, CorrelationId: '123'}));
+        //globalAny.fetch = require('jest-fetch-mock');
+        //globalAny.fetch = jest.fn(() => Promise.resolve());
+
+        //Input.propTypes = Object.assign({}, Input.propTypes, geoPropTypes);
+        //mount<React.Component>(<Input/>);
+        //await delay(3000);
+        //render(<Input/>);
+        mount(<Input/>)
+        //expect('x').toBe('x');
+        await delay(8000);
+        expect(globalAny.fetch).toHaveBeenCalledTimes(1);
+        // expect(global.fetch).toHaveBeenCalledWith('https://api.openweathermap.org/data/2.5/forecast?lat=123&long=321')
+
+        //await delay(3000);
+        // process.nextTick(() => {
+        //     //delay(7000);
+        //     expect(globalAny.fetch).toHaveBeenCalledTimes(1);
+
+        //     globalAny.fetch.mockClear();
+        //     //done( () => expect(globalAny.fetch).toHaveBeenCalledTimes(1));
+        // });
+    })
+
+    // it('Valid should return results', async () => {
+    //     const cityName = 'Bradford';
+    //     var driver = new Builder().forBrowser('chrome').build();
+    //     try
+    //     {
+    //         await driver.get('http://localhost:3000');
+    //         await driver.findElement(By.id('searchId')).sendKeys(cityName, Key.RETURN);
+    //         var headerElement = await driver.findElement(By.id('cityName'));
+    //         await driver.wait(until.elementTextContains(headerElement, cityName));
+    //         //headerElement.getText().then(t => expect(t).toBe(cityName));
+    //     }
+    //     finally
+    //     {
+    //         driver.close();
+    //     }
+    // })
+})
